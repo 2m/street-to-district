@@ -42,3 +42,30 @@ object StreetToDistrict extends App {
     district.asText()
   }
 }
+
+object Scraper extends App {
+  import collection.JavaConverters._
+
+  val webClient = new WebClient()
+  webClient.getOptions.setJavaScriptEnabled(false)
+
+  val StreetLinkPattern = "g[0-9]+\\.html".r
+
+  val page = webClient.getPage[HtmlPage]("http://vilnius21.lt")
+  val streetToDistrict = page.querySelectorAll("#meniukaireje .catmenuhome:first-child a").asScala.toList.flatMap {
+    case districtLink: HtmlAnchor =>
+//      println("found district link " + districtLink.asText())
+      val districtPage = districtLink.click[HtmlPage]()
+      districtPage.querySelectorAll(".turinys a").asScala.toList.flatMap {
+        case streetLink: HtmlAnchor =>
+//          println("found street link " + streetLink.asText() + streetLink.getHrefAttribute)
+          StreetLinkPattern.findFirstIn(streetLink.getHrefAttribute).map(_ => streetLink.asText() -> districtLink.asText())
+        case _ => None
+        }
+      }
+
+  streetToDistrict.foreach {
+    case ((str, dst)) => println(s"$str,$dst")
+  }
+
+}
