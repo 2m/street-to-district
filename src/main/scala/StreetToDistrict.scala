@@ -17,7 +17,7 @@ object StreetToDistrict extends App {
       }
     }
 
-  Http().bindAndHandle(route, "0.0.0.0", 8080)
+  Http().bindAndHandle(route, "0.0.0.0", sys.env.getOrElse("PORT", "8080").toInt)
 
   def streetToDistrict(streetName: String) = {
     val webClient = new WebClient()
